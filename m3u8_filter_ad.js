@@ -1,12 +1,15 @@
 // ==UserScript==
 // @name         M3U8 Filter Ad Script
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0
+// @version      1.0.1
 // @description  自用，拦截和过滤 m3u8（解析/采集资源） 的广告切片，同时打印被过滤的行信息。
 // @author       ltxlong
 // @match        *://*/*
 // @grant        unsafeWindow
 // @run-at       document-start
+// @license      MIT
+// @downloadURL https://update.greasyfork.org/scripts/512300/M3U8%20Filter%20Ad%20Script.user.js
+// @updateURL https://update.greasyfork.org/scripts/512300/M3U8%20Filter%20Ad%20Script.meta.js
 // ==/UserScript==
 
 (function() {
@@ -19,6 +22,8 @@
     }
 
     let ts_name_len = 0; // ts前缀长度
+
+    let ts_name_len_extend = 1; // 容错
 
     let prev_ts_name_index = -1; // ts序列号
 
@@ -69,6 +74,9 @@
                 let ts_name_index = extractNumberBeforeTS(line);
                 if (ts_name_index === null) {
                     ts_type = 1; // ts命名模式
+
+                    console.log('----------------------------识别ts模式1---------------------------');
+
                 } else {
                     prev_ts_name_index = ts_name_index; // ts序列号
                     prev_ts_name_index--;
@@ -76,6 +84,11 @@
 
                 break;
             }
+
+            if (i === lines.length - 1) {
+                console.log('----------------------------识别ts模式0---------------------------');
+            }
+
         }
 
         // 开始遍历过滤
@@ -100,7 +113,7 @@
                         if (the_ts_name_len > 0) {
 
                             // 根据ts名字长度过滤
-                            if (the_ts_name_len !== ts_name_len) {
+                            if (the_ts_name_len - ts_name_len > ts_name_len_extend) {
                                 // 广告过滤
                                 if (lines[i + 3] && lines[i + 3].startsWith('#EXT-X-DISCONTINUITY')) {
                                     // 打印即将过滤的行
@@ -121,6 +134,8 @@
                                 }
 
                                 continue;
+                            } else {
+                                ts_name_len = the_ts_name_len;
                             }
 
                             // 根据ts序列号过滤
@@ -160,7 +175,7 @@
                     if (the_ts_name_len > 0) {
 
                         // 根据ts名字长度过滤
-                        if (the_ts_name_len !== ts_name_len) {
+                        if (the_ts_name_len - ts_name_len > ts_name_len_extend) {
                             // 广告过滤
                             if (lines[i + 2] && lines[i + 2].startsWith('#EXT-X-DISCONTINUITY')) {
                                 // 打印即将过滤的行
@@ -181,6 +196,8 @@
                             }
 
                             continue;
+                        } else {
+                            ts_name_len = the_ts_name_len;
                         }
 
                         // 根据ts序列号过滤
