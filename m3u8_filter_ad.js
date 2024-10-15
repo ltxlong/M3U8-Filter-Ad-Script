@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         M3U8 Filter Ad Script
 // @namespace    http://tampermonkey.net/
-// @version      1.0.1
+// @version      1.0.2
 // @description  自用，拦截和过滤 m3u8（解析/采集资源） 的广告切片，同时打印被过滤的行信息。
 // @author       ltxlong
 // @match        *://*/*
@@ -25,9 +25,19 @@
 
     let ts_name_len_extend = 1; // 容错
 
+    let first_extinf_row = '';
+
+    let the_extinf_judge_row_n = 0;
+
+    let the_same_extinf_name_n = 0;
+
+    let the_extinf_benchmark_n = 5; // 基准
+
     let prev_ts_name_index = -1; // ts序列号
 
     let ts_type = 0; // 0-xxxx000数字递增.ts模式 ；1-xxxxxxxxxx.ts模式
+
+    let the_ext_x_mode = 0; // 0-ext_x_discontinuity判断模式0；1-ext_x_discontinuity判断模式1
 
     function isM3U8File(url) {
         return /\.m3u8($|\?)/.test(url);
@@ -60,10 +70,22 @@
     function filterLines(lines) {
         let result = [];
 
-        // 先根据第一个ts名称来初始化参数
+        // 先根据第一、二个ts名称来初始化参数
         for (let i = 0; i < lines.length; i++) {
 
             const line = lines[i];
+
+            if (the_extinf_judge_row_n === 0 && line.startsWith('#EXTINF')) {
+                first_extinf_row = line;
+
+                the_extinf_judge_row_n++;
+            } else if (the_extinf_judge_row_n === 1 && line.startsWith('#EXTINF')) {
+                if (line !== first_extinf_row) {
+                    first_extinf_row = '';
+                }
+
+                the_extinf_judge_row_n++;
+            }
 
             let the_ts_name_len = line.indexOf('.ts'); // ts前缀长度
 
@@ -77,16 +99,32 @@
 
                     console.log('----------------------------识别ts模式1---------------------------');
 
+                    break;
                 } else {
-                    prev_ts_name_index = ts_name_index; // ts序列号
-                    prev_ts_name_index--;
+
+                    if (the_extinf_judge_row_n === 1) {
+
+                        prev_ts_name_index = ts_name_index; // ts序列号
+
+                    } else if (the_extinf_judge_row_n === 2) {
+
+                        if (ts_name_index !== prev_ts_name_index + 1) {
+                            ts_type = 1; // ts命名模式
+
+                            console.log('----------------------------识别ts模式1---------------------------');
+
+                            break;
+                        } else {
+                            prev_ts_name_index--;
+                        }
+                    }
                 }
 
-                break;
-            }
+                if (the_extinf_judge_row_n === 2) {
+                    console.log('----------------------------识别ts模式0---------------------------')
 
-            if (i === lines.length - 1) {
-                console.log('----------------------------识别ts模式0---------------------------');
+                    break;
+                }
             }
 
         }
@@ -233,6 +271,18 @@
                 }
             } else {
 
+                if (line.startsWith('#EXTINF')) {
+                    if (line === first_extinf_row && the_same_extinf_name_n <= the_extinf_benchmark_n && the_ext_x_mode === 0) {
+                        the_same_extinf_name_n++;
+                    } else {
+                        the_ext_x_mode = 1;
+                    }
+
+                    if (the_same_extinf_name_n > the_extinf_benchmark_n) {
+                        the_ext_x_mode = 1;
+                    }
+                }
+
                 if (line.startsWith('#EXT-X-DISCONTINUITY')) {
                     // 检查当前行是否跟 #EXT-X-PLAYLIST-TYPE相关
                     if (i > 0 && lines[i - 1].startsWith('#EXT-X-PLAYLIST-TYPE')) {
@@ -242,9 +292,16 @@
                     } else {
 
                         // 如果第 i+2 行是 .ts 文件，跳过当前行和接下来的两行
-                        if (lines[i + 2] && lines[i + 2].indexOf('.ts') > 0) {
+                        if (lines[i + 1] && lines[i + 1].startsWith('#EXTINF') && lines[i + 2] && lines[i + 2].indexOf('.ts') > 0) {
+
+                            let the_ext_x_discontinuity_condition_flag = false;
+
+                            if (the_ext_x_mode === 1) {
+                                the_ext_x_discontinuity_condition_flag = lines[i + 1] !== first_extinf_row && the_same_extinf_name_n > the_extinf_benchmark_n;
+                            }
+
                             // 进一步检测第 i+3 行是否也是 #EXT-X-DISCONTINUITY
-                            if (lines[i + 3] && lines[i + 3].startsWith('#EXT-X-DISCONTINUITY')) {
+                            if (lines[i + 3] && lines[i + 3].startsWith('#EXT-X-DISCONTINUITY') && the_ext_x_discontinuity_condition_flag) {
                                 // 打印即将过滤的行
                                 console.log('------------------------------------------------------------------');
                                 console.log('过滤规则: #EXT-X-DISCONTINUITY-广告-#EXT-X-DISCONTINUITY过滤');
