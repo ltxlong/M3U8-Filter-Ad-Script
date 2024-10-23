@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         M3U8 Filter Ad Script
 // @namespace    http://tampermonkey.net/
-// @version      1.0.2
-// @description  自用，拦截和过滤 m3u8（解析/采集资源） 的广告切片，同时打印被过滤的行信息。
+// @version      1.0.3
+// @description  自用，拦截和过滤 m3u8（解析/采集资源） 的广告切片，同时在console打印过滤的行信息，不会误删。
 // @author       ltxlong
 // @match        *://*/*
 // @grant        unsafeWindow
@@ -14,12 +14,6 @@
 
 (function() {
     'use strict';
-
-    initHook();
-
-    function initHook() {
-        hookXHR();
-    }
 
     let ts_name_len = 0; // ts前缀长度
 
@@ -35,24 +29,12 @@
 
     let prev_ts_name_index = -1; // ts序列号
 
-    let ts_type = 0; // 0-xxxx000数字递增.ts模式 ；1-xxxxxxxxxx.ts模式
+    let ts_type = 0; // 0：xxxx000数字递增.ts模式0 ；1：xxxxxxxxxx.ts模式1
 
-    let the_ext_x_mode = 0; // 0-ext_x_discontinuity判断模式0；1-ext_x_discontinuity判断模式1
+    let the_ext_x_mode = 0; // 0：ext_x_discontinuity判断模式0 ；1：ext_x_discontinuity判断模式1
 
     function isM3U8File(url) {
         return /\.m3u8($|\?)/.test(url);
-    }
-
-    async function safelyProcessM3U8(url, content) {
-        try {
-            const lines = content.split('\n');
-            const newLines = filterLines(lines);
-
-            return newLines.join('\n');
-        } catch (e) {
-            console.error(`处理 m3u8 文件时出错: ${url}`, e);
-            return content;
-        }
     }
 
     function extractNumberBeforeTS(str) {
@@ -329,6 +311,19 @@
 
         return result;
     }
+    
+    async function safelyProcessM3U8(url, content) {
+        try {
+            const lines = content.split('\n');
+            const newLines = filterLines(lines);
+
+            return newLines.join('\n');
+        } catch (e) {
+            console.error(`处理 m3u8 文件时出错: ${url}`, e);
+            
+            return content;
+        }
+    }
 
     function hookXHR() {
         const OriginalXHR = unsafeWindow.XMLHttpRequest;
@@ -346,5 +341,11 @@
             }
         };
     }
+    
+    function initHook() {
+        hookXHR();
+    }
+
+    initHook();
 
 })();
