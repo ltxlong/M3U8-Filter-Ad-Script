@@ -1,19 +1,17 @@
 // ==UserScript==
 // @name              M3U8 Filter Ad Script
 // @namespace         http://tampermonkey.net/
-// @version           1.1.1
+// @version           1.2.1
 // @description       自用，拦截和过滤 m3u8（解析/采集资源） 的切片（插播）广告，同时在console打印过滤的行信息，不会误删。
 // @author            ltxlong
 // @match             *://*/*
 // @run-at            document-start
 // @grant             unsafeWindow
 // @grant             GM_getResourceText
-// @grant             GM_addStyle
 // @grant             GM_registerMenuCommand
 // @grant             GM_unregisterMenuCommand
 // @grant             GM_setValue
 // @grant             GM_getValue
-// @require           https://unpkg.com/jquery@3.6.0/dist/jquery.min.js
 // @require           https://unpkg.com/sweetalert2@11/dist/sweetalert2.min.js
 // @resource Swal     https://unpkg.com/sweetalert2@11/dist/sweetalert2.min.css
 // @resource SwalDark https://unpkg.com/@sweetalert2/theme-dark@5/dark.min.css
@@ -82,18 +80,30 @@
 			`;
 
     // 动态添加样式
-    function addStyle(id, css, tag = 'style', element = 'body', position = 'before') {
-        let styleDom = document.getElementById(id);
-        if (styleDom) styleDom.remove();
-        let style = document.createElement(tag);
-        style.rel = 'stylesheet';
-        style.id = id;
-        tag === 'style' ? style.innerHTML = css : style.href = css;
-        if (position === "before") {
-            $(element).prepend($(style));
-        } else {
-            $(element).append($(style));
-        }
+    let try_add_style_n = 0;
+    function addStyle(id, css) {
+
+        let tryToAddStyle = function() {
+            let styleDom = unsafeWindow.document.getElementById(id);
+            if (styleDom) styleDom.remove();
+
+            let style = unsafeWindow.document.createElement('style');
+            style.rel = 'stylesheet';
+            style.id = id;
+            style.innerHTML = css;
+
+            let targetElement = unsafeWindow.document.body;
+            if (targetElement) {
+                targetElement.insertBefore(style, targetElement.firstChild);
+            } else {
+                try_add_style_n++;
+                if (try_add_style_n < 50) {
+                    setTimeout(tryToAddStyle, 100);
+                }
+            }
+        };
+
+        tryToAddStyle();
     }
 
     // 先监听颜色方案变化
