@@ -675,7 +675,6 @@
                     });
 
                 }
-
             } else {
                 if (unsafeWindow.self === unsafeWindow.top) {
 
@@ -720,7 +719,6 @@
                     add_menu_item_all();
                 });
             }
-
         } else {
             if (unsafeWindow.self === unsafeWindow.top) {
                 menu_item_toast = GM_registerMenuCommand('已关闭弹窗提示（可点击设置开启）', function() {
@@ -734,7 +732,6 @@
                     add_menu_item_all();
                 });
             }
-
         }
     }
 
@@ -814,8 +811,11 @@
                 if (the_video_dom) {
                     the_video_dom.addEventListener('loadedmetadata', () => {
                         setTimeout(function() {
-                            if (!filter_done_flag && show_toast_tip_flag) {
-                                message.warning('过滤失败！ctrl+F5 刷新试试，<br><br> 若还不行，说明播放视频格式<br>不是m3u8，无法过滤！');
+                            if (!filter_done_flag) {
+                                if (show_toast_tip_flag) {
+                                    message.warning('过滤失败！ctrl+F5 刷新试试，<br><br> 若还不行，说明播放视频格式<br>不是m3u8，无法过滤！');
+                                }
+
                                 GM_unregisterMenuCommand(menu_item_filter_tip);
                                 check_menu_item_filter_tip();
                             }
