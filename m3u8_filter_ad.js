@@ -814,7 +814,7 @@
                 if (the_video_dom) {
                     the_video_dom.addEventListener('loadedmetadata', () => {
                         setTimeout(function() {
-                            if (!filter_done_flag) {
+                            if (!filter_done_flag && show_toast_tip_flag) {
                                 message.warning('过滤失败！ctrl+F5 刷新试试，<br><br> 若还不行，说明播放视频格式<br>不是m3u8，无法过滤！');
                                 GM_unregisterMenuCommand(menu_item_filter_tip);
                                 check_menu_item_filter_tip();
