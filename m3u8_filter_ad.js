@@ -16,8 +16,6 @@
 // @resource Swal     https://unpkg.com/sweetalert2@11/dist/sweetalert2.min.css
 // @resource SwalDark https://unpkg.com/@sweetalert2/theme-dark@5/dark.min.css
 // @license           MIT
-// @downloadURL       https://update.greasyfork.org/scripts/512300/M3U8%20Filter%20Ad%20Script.user.js
-// @updateURL         https://update.greasyfork.org/scripts/512300/M3U8%20Filter%20Ad%20Script.meta.js
 // ==/UserScript==
 
 (function() {
