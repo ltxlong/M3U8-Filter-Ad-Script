@@ -815,7 +815,7 @@
 
                                 if (show_toast_tip_flag) {
 
-                                    if (the_video_dom.src.includes('.mp4')) {
+                                    if (the_video_dom.src.indexOf('.mp4') > 0) {
                                         message.error('过滤失败！<br><br>播放视频格式是mp4 <br><br>不是m3u8，无法过滤！');
                                     } else {
                                         message.warning('过滤失败！ctrl+F5 刷新试试，<br><br> 若还不行，说明播放视频格式<br>不是m3u8，无法过滤！');
