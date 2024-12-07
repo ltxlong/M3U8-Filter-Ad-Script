@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              M3U8 Filter Ad Script
 // @namespace         http://tampermonkey.net/
-// @version           1.3.0
+// @version           1.3.1
 // @description       自用，拦截和过滤 m3u8（解析/采集资源） 的切片（插播）广告，同时在console打印过滤的行信息，不会误删。
 // @author            ltxlong
 // @match             *://*/*
@@ -16,6 +16,8 @@
 // @resource Swal     https://unpkg.com/sweetalert2@11/dist/sweetalert2.min.css
 // @resource SwalDark https://unpkg.com/@sweetalert2/theme-dark@5/dark.min.css
 // @license           MIT
+// @downloadURL https://update.greasyfork.org/scripts/512300/M3U8%20Filter%20Ad%20Script.user.js
+// @updateURL https://update.greasyfork.org/scripts/512300/M3U8%20Filter%20Ad%20Script.meta.js
 // ==/UserScript==
 
 (function() {
@@ -810,8 +812,15 @@
                     the_video_dom.addEventListener('loadedmetadata', () => {
                         setTimeout(function() {
                             if (!filter_done_flag) {
+
                                 if (show_toast_tip_flag) {
-                                    message.warning('过滤失败！ctrl+F5 刷新试试，<br><br> 若还不行，说明播放视频格式<br>不是m3u8，无法过滤！');
+
+                                    if (the_video_dom.src.includes('.mp4')) {
+                                        message.error('过滤失败！<br><br>播放视频格式是mp4 <br><br>不是m3u8，无法过滤！');
+                                    } else {
+                                        message.warning('过滤失败！ctrl+F5 刷新试试，<br><br> 若还不行，说明播放视频格式<br>不是m3u8，无法过滤！');
+                                    }
+
                                 }
 
                                 GM_unregisterMenuCommand(menu_item_filter_tip);
