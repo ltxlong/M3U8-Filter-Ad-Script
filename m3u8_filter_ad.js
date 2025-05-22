@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              M3U8 Filter Ad Script
 // @namespace         http://tampermonkey.net/
-// @version           1.3.1
+// @version           1.3.2
 // @description       自用，拦截和过滤 m3u8（解析/采集资源） 的切片（插播）广告，同时在console打印过滤的行信息，不会误删。
 // @author            ltxlong
 // @match             *://*/*
@@ -339,8 +339,8 @@
 
                 if (line.startsWith('#EXT-X-DISCONTINUITY') && lines[i + 1] && lines[i + 2]) {
 
-                    // 检查当前行是否跟 #EXT-X-PLAYLIST-TYPE相关
-                    if (i > 0 && lines[i - 1].startsWith('#EXT-X-PLAYLIST-TYPE')) {
+                    // 检查当前行是否跟 #EXT-X-相关
+                    if (i > 0 && lines[i - 1].startsWith('#EXT-X-')) {
                         result.push(line);
 
                         continue;
