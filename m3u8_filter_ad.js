@@ -1,10 +1,15 @@
 // ==UserScript==
 // @name              M3U8 Filter Ad Script
 // @namespace         http://tampermonkey.net/
-// @version           1.3.2
+// @version           2.0.0
 // @description       自用，拦截和过滤 m3u8（解析/采集资源） 的切片（插播）广告，同时在console打印过滤的行信息，不会误删。
 // @author            ltxlong
 // @match             *://*/*
+// @exclude           *://challenges.cloudflare.com/*
+// @exclude           *://*.hcaptcha.com/*
+// @exclude           *://*/*recaptcha*
+// @exclude           *://api.geetest.com/*
+// @exclude           *://static.geetest.com/*
 // @run-at            document-start
 // @grant             unsafeWindow
 // @grant             GM_getResourceText
@@ -22,6 +27,43 @@
 
 (function() {
     'use strict';
+
+    // --- 判断是否为验证页面 ---
+    function is_verification_page() {
+        const current_url = unsafeWindow.location.href;
+        const page_title = unsafeWindow.document.title;
+
+        const verification_keywords = [
+            // URL 路径特征
+            'challenges.cloudflare.com',
+            'geetest.com',
+            'captcha',
+            'challenge-platform',
+            // 页面标题关键词
+            'just a moment...',
+            'checking your browser',
+            'security check',
+            'verify you are human',
+            'human verification',
+            '人机验证',
+            '安全验证'
+        ];
+
+        for (const the_keyword of verification_keywords) {
+            if (current_url.toLowerCase().includes(the_keyword) || (page_title && page_title.toLowerCase().includes(the_keyword))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // ======== 脚本执行入口 ========
+    // 如果是人机校验页面，则立即停止后续所有操作
+    if (is_verification_page()) {
+        return;
+    }
+    // ======== 检查结束 ========
 
     let ts_name_len = 0; // ts前缀长度
 
