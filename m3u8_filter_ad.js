@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name              M3U8 Filter Ad Script
 // @namespace         http://tampermonkey.net/
-// @version           2.0.0
+// @version           2.0.1
 // @description       自用，拦截和过滤 m3u8（解析/采集资源） 的切片（插播）广告，同时在console打印过滤的行信息，不会误删。
 // @author            ltxlong
 // @match             *://*/*
@@ -40,13 +40,25 @@
             'captcha',
             'challenge-platform',
             // 页面标题关键词
-            'just a moment...',
+            'just a moment',
             'checking your browser',
+            'checking browser security',
             'security check',
             'verify you are human',
+            'please verify',
             'human verification',
-            '人机验证',
-            '安全验证'
+            'security challenge',
+            'are you a human',
+            'are you a robot',
+            'not a robot',
+            'bot detection',
+            '验证',
+            '安全防护',
+            '安全检测',
+            '安全检查',
+            '正在检查您的浏览器',
+            '请稍候',
+            '我不是机器人'
         ];
 
         for (const the_keyword of verification_keywords) {
